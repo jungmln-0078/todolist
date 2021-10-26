@@ -1,30 +1,39 @@
 <template>
   <div id="nav">
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
+    <p>{{ completedTodos }}</p>
+    <input type="text" v-model="inputValue" @keypress.enter="addTodo">
+    <button @click="addTodo">Add</button>
+    <div id="todolist" v-for="todo in todoList" :key="todo.id">
+      <todo :id="todo.id" :text="todo.text" />
+    </div>
   </div>
-  <router-view/>
 </template>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+<script>
+import { reactive, computed } from '@vue/reactivity'
+import { useStore } from 'vuex'
+import { toRefs } from 'vue'
+import todo from './components/todo.vue';
+export default {
+  components: { todo },
+  setup() {
+    const store = useStore();
+    const state = reactive({
+      todoList: [],
+      inputValue: null,
+      completedTodos: computed(() => store.getters.completedTodos)
+      });
+    const addTodo = () => {
+      if (state.inputValue) {
+        store.commit('addTodo', {id: state.todoList.length, text: state.inputValue, isDone: false});
+        state.inputValue = "";
+        loadState();
+      }
+    }
+    const loadState = () => {
+      state.todoList = store.state.todoList;
+    }
+    return { ...toRefs(state), addTodo, loadState }
+  },
 }
-
-#nav {
-  padding: 30px;
-}
-
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-#nav a.router-link-exact-active {
-  color: #42b983;
-}
-</style>
+</script>
